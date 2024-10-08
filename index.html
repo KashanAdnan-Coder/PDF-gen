@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <form id="pdf-form">
+        <input type="file" id="userImage" accept="image/*" required />
+        <input type="text" autocomplete="true" id="name" placeholder="Name" required />
+        <input type="text" autocomplete="true" id="fatherName" placeholder="Father Name" required />
+        <input type="text" autocomplete="true" id="cnic" placeholder="CNIC" required />
+        <input type="text" autocomplete="true" id="course" placeholder="Course" required />
+        <button type="submit">Generate PDF</button>
+    </form>
+    <canvas id="cardCanvas" style="display:none"></canvas>
+    <canvas id="cardBackCanvas" style="display:none"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        document.getElementById('pdf-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const { jsPDF } = window.jspdf;
+
+            const userImageFile = document.getElementById('userImage').files[0];
+            const userName = document.getElementById('name').value;
+            const fatherName = document.getElementById('fatherName').value;
+            const cnic = document.getElementById('cnic').value;
+            const course = document.getElementById('course').value;
+
+            const cardFront = new Image();
+            cardFront.src = './card-front.png'; // Replace with the actual path
+
+            const cardBack = new Image();
+            cardBack.src = './card-back.png'; // Replace with the actual path
+
+            // Wait for both card images to load
+            await Promise.all([imageLoad(cardFront), imageLoad(cardBack)]);
+
+            const userImage = await loadImageFile(userImageFile);
+
+            const canvasBack = document.getElementById('cardBackCanvas');
+            const ctxBack = canvasBack.getContext('2d');
+            const canvas = document.getElementById('cardCanvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = cardFront.width;
+            canvas.height = cardFront.height;
+            canvasBack.width = cardBack.width;
+            canvasBack.height = cardBack.height;
+
+            // Draw front card image
+            ctx.drawImage(cardFront, 0, 0);
+
+            // Draw back card image
+            ctxBack.drawImage(cardBack, 0, 0);
+
+            ctx.font = '200px Arial'; // Adjust font size based on canvas size
+            ctx.fillStyle = 'black';
+            ctx.fillText(userName, 1100, 3650);
+            ctx.fillText(Math.floor(100000 + Math.random() * 900000), 1650, 4250);
+            // Circular user image settings
+            const circleX = 1720;
+            const circleY = 1780;
+            const circleRadius = 880;
+
+            // Draw circular clipped user image
+            ctx.beginPath();
+            ctx.arc(circleX, circleY, circleRadius, 0, Math.PI * 2, false);
+            ctx.closePath();
+            ctx.clip();
+
+            ctx.drawImage(userImage, circleX - circleRadius, circleY - circleRadius, circleRadius * 2, circleRadius * 2);
+
+            // Restore the canvas context after the clip and image draw
+            // ctx.restore();
+
+            // Add text to the front card after restoring the context
+
+            // Add text to the back card
+            ctxBack.font = '190px Arial';
+            ctxBack.fillText(userName, 800, 500);
+            ctxBack.fillText(fatherName, 1290, 750);
+            ctxBack.fillText(cnic, 700, 1020);
+            ctxBack.fillText(course, 900, 1280);
+
+            const cardFrontImage = canvas.toDataURL('image/png');
+            const cardBackImage = canvasBack.toDataURL('image/png');
+
+            const doc = new jsPDF('landscape');
+            doc.addImage(cardFrontImage, 'PNG', 40, 10, 100, 140);
+            doc.addImage(cardBackImage, 'PNG', 160, 10, 100, 140);
+
+            doc.save('id_card.pdf');
+        });
+
+        function imageLoad(img) {
+            return new Promise(resolve => {
+                img.onload = resolve;
+            });
+        }
+
+        function loadImageFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.src = reader.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+    </script>
+
+</body>
+
+</html>

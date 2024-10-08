@@ -1,0 +1,89 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+    document.getElementById('pdf-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const { jsPDF } = window.jspdf;
+
+        const userImageFile = document.getElementById('userImage').files[0];
+        const userName = document.getElementById('name').value;
+        const fatherName = document.getElementById('fatherName').value;
+        const cnic = document.getElementById('cnic').value;
+        const course = document.getElementById('course').value;
+
+        const cardFront = new Image();// Enable cross-origin request
+        cardFront.src = './card-front.png'; // Replace with the actual path
+
+        const cardBack = new Image();
+        cardBack.src = './card-back.png'; // Replace with the actual path
+
+        // Wait for both card images to load
+        await Promise.all([imageLoad(cardFront), imageLoad(cardBack)]);
+
+        const userImage = await loadImageFile(userImageFile);
+
+        const canvasBack = document.getElementById('cardBackCanvas');
+        const ctxBack = canvasBack.getContext('2d');
+        const canvas = document.getElementById('cardCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = cardFront.width;
+        canvas.height = cardFront.height;
+        canvasBack.width = cardBack.width;
+        canvasBack.height = cardBack.height;
+        ctx.drawImage(cardFront, 0, 0);
+        ctxBack.drawImage(cardBack, 0, 0);
+        const circleX = 1720;
+        const circleY = 1780;
+        const circleRadius = 880;
+
+        ctx.beginPath();
+        ctx.arc(circleX, circleY, circleRadius, 0, Math.PI * 2, false);
+        ctx.closePath();
+        ctx.clip();
+
+        ctx.drawImage(userImage, circleX - circleRadius, circleY - circleRadius, circleRadius * 2, circleRadius * 2);
+        ctx.restore();
+        ctx.font = '190px Arial';
+
+        ctx.fillText(userName, 250, 100);
+        ctx.fillText(fatherName, 250, 130);
+        ctx.fillText(cnic, 250, 160);
+        ctx.fillText(course, 250, 190);
+        // ctx.fillText(Math.floor(100000 + Math.random() * 900000).toString(), 1000, 3500);
+
+        ctxBack.font = '190px Arial';
+        ctxBack.fillText(userName, 800, 500);
+        ctxBack.fillText(fatherName, 1290, 750);
+        ctxBack.fillText(cnic, 700, 1020);
+        ctxBack.fillText(course, 900, 1280);
+        const cardFrontImage = canvas.toDataURL('image/png');
+        const cardBackImage = canvasBack.toDataURL('image/png');
+
+        const doc = new jsPDF('landscape');
+        doc.addImage(cardFrontImage, 'PNG', 40, 10, 100, 140);
+        doc.addImage(cardBackImage, 'PNG', 160, 10, 100, 140);
+
+        doc.save('id_card.pdf');
+    });
+
+    function imageLoad(img) {
+        return new Promise(resolve => {
+            img.onload = resolve;
+        });
+    }
+
+    function loadImageFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.src = reader.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+</script>
