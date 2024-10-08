@@ -12,7 +12,7 @@
         <input type="file" id="userImage" accept="image/*" required />
         <input type="text" autocomplete="true" id="name" placeholder="Name" required />
         <input type="text" autocomplete="true" id="fatherName" placeholder="Father Name" required />
-        <input type="text" autocomplete="true" id="cnic" placeholder="CNIC" required />
+        <input type="number" autocomplete="true" id="cnic" placeholder="CNIC" required />
         <input type="text" autocomplete="true" id="course" placeholder="Course" required />
         <button type="submit">Generate PDF</button>
     </form>
@@ -61,7 +61,7 @@
 
             ctx.font = '200px Arial'; // Adjust font size based on canvas size
             ctx.fillStyle = 'black';
-            ctx.fillText(userName, 1100, 3650);
+            ctx.fillText(userName + "" + fatherName, 1100, 3650);
             ctx.fillText(Math.floor(100000 + Math.random() * 900000), 1650, 4250);
             // Circular user image settings
             const circleX = 1720;
